@@ -13,7 +13,12 @@
 
 #include <gtest/gtest.h>
 
+// Unused:
+// arguments.useBarrierSynchronization
+
+
 static TestResult run(const ExecuteCommandListImmediateArguments &arguments, Statistics &statistics) {
+    const bool HaveEvent = false;
     MeasurementFields typeSelector(MeasurementUnit::Microseconds, MeasurementType::Cpu);
 
     if (isNoopRun()) {
@@ -22,17 +27,29 @@ static TestResult run(const ExecuteCommandListImmediateArguments &arguments, Sta
     }
 
     // Setup
-    Sycl sycl{sycl::device{sycl::gpu_selector_v}};
+    Sycl sycl = arguments.useProfiling ?
+        Sycl{sycl::device{sycl::gpu_selector_v}, sycl::property::queue::enable_profiling()} :
+        HaveEvent ?
+        Sycl{sycl::device{sycl::gpu_selector_v}} :
+        Sycl{sycl::device{sycl::gpu_selector_v}, sycl::ext::oneapi::property::queue::discard_events()};
     Timer timer;
     const size_t gws = 1u;
     const size_t lws = 1u;
     sycl::nd_range<1> range(gws, lws);
 
     // Create kernel
-    const auto empty = [=]([[maybe_unused]] auto i) {};
+    //const auto empty = [=]([[maybe_unused]] auto i) {};
+    int kernelOperationsCount = static_cast<int>(arguments.kernelExecutionTime * 4);
+    const auto eat_time = [=]([[maybe_unused]] auto u) {
+        volatile int value = 1u;
+        for(int i =0;i<kernelOperationsCount;i++){
+            value /=2;
+            value *=2;
+        }
+    };
 
     // Warmup
-    auto event = sycl.queue.parallel_for(range, empty);
+    auto event = sycl.queue.parallel_for(range, eat_time);
     if (arguments.useEventForHostSync) {
         event.wait();
     } else {
@@ -44,21 +61,27 @@ static TestResult run(const ExecuteCommandListImmediateArguments &arguments, Sta
         timer.measureStart();
         for (auto iteration = 0u; iteration < arguments.amountOfCalls; iteration++) {
             if (arguments.useEventForHostSync) {
-                event = sycl.queue.parallel_for(range, event, empty);
+                event = sycl.queue.parallel_for(range, event, eat_time);
             } else {
-                sycl.queue.parallel_for(range, empty);
+                sycl.queue.parallel_for(range, eat_time);
             }
         }
 
-        if (arguments.measureCompletionTime) {
-            if (arguments.useEventForHostSync) {
-                event.wait();
-            } else {
-                sycl.queue.wait();
-            }
+        if (!arguments.measureCompletionTime) {
+            timer.measureEnd();
+            statistics.pushValue(timer.get(), typeSelector.getUnit(), typeSelector.getType());
         }
-        timer.measureEnd();
-        statistics.pushValue(timer.get(), typeSelector.getUnit(), typeSelector.getType());
+
+        if (arguments.useEventForHostSync) {
+            event.wait();
+        } else {
+            sycl.queue.wait();
+        }
+
+        if (arguments.measureCompletionTime) {
+            timer.measureEnd();
+            statistics.pushValue(timer.get(), typeSelector.getUnit(), typeSelector.getType());
+        }
     }
     sycl.queue.wait();
 
