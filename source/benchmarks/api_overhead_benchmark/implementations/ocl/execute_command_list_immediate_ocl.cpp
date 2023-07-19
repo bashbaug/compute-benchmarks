@@ -15,7 +15,7 @@
 #include <gtest/gtest.h>
 
 static TestResult run(const ExecuteCommandListImmediateArguments &arguments, Statistics &statistics) {
-    const bool HaveEvent = true;
+    const bool HaveEvent = false;
     MeasurementFields typeSelector(MeasurementUnit::Microseconds, MeasurementType::Cpu);
 
     if (isNoopRun()) {
@@ -79,6 +79,10 @@ static TestResult run(const ExecuteCommandListImmediateArguments &arguments, Sta
         }
     }
     ASSERT_CL_SUCCESS(clFinish(opencl.commandQueue));
+
+    // Clean up
+    ASSERT_CL_SUCCESS(clReleaseProgram(program));
+    ASSERT_CL_SUCCESS(clReleaseKernel(kernel));
 
     return TestResult::Success;
 }
