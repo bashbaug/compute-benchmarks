@@ -24,7 +24,7 @@ static TestResult run(const ExecuteCommandListImmediateArguments &arguments, Sta
     }
 
     // Setup
-    QueueProperties queueProperties = QueueProperties::create().setProfiling(arguments.useProfiling).setOoq(true);
+    QueueProperties queueProperties = QueueProperties::create().setProfiling(arguments.useProfiling).setOoq(false);
     Opencl opencl(queueProperties);
     cl_int retVal{};
     Timer timer;

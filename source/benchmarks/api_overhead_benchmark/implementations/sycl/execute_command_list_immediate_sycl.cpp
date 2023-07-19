@@ -28,10 +28,10 @@ static TestResult run(const ExecuteCommandListImmediateArguments &arguments, Sta
 
     // Setup
     Sycl sycl = arguments.useProfiling ?
-        Sycl{sycl::device{sycl::gpu_selector_v}, sycl::property::queue::enable_profiling()} :
+        Sycl{sycl::device{sycl::gpu_selector_v}, sycl::property::queue::in_order(), sycl::property::queue::enable_profiling()} :
         HaveEvent ?
-        Sycl{sycl::device{sycl::gpu_selector_v}} :
-        Sycl{sycl::device{sycl::gpu_selector_v}, sycl::ext::oneapi::property::queue::discard_events()};
+        Sycl{sycl::device{sycl::gpu_selector_v}, sycl::property::queue::in_order()} :
+        Sycl{sycl::device{sycl::gpu_selector_v}, sycl::property::queue::in_order(), sycl::ext::oneapi::property::queue::discard_events()};
     Timer timer;
     const size_t gws = 1u;
     const size_t lws = 1u;
