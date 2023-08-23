@@ -40,7 +40,7 @@ static TestResult run([[maybe_unused]] const SubmitGraphArguments &arguments, St
         // Setup
         auto queuePropsIndex = 0;
         //queuePropsIndex |= arguments.useProfiling ? 0x1 : 0;
-        //queuePropsIndex |= arguments.inOrderQueue ? 0x2 : 0;
+        queuePropsIndex |= arguments.inOrderQueue ? 0x2 : 0;
         sycl::queue queue{queueProps[queuePropsIndex]};
 
         Timer timer;
