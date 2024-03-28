@@ -39,7 +39,7 @@ INSTANTIATE_TEST_SUITE_P(
         //::testing::Values(false),         // useProfiling
         ::testing::Values(false, true),   // inOrderQueue
         //::testing::Values(false, true),   // discardEvents
-        ::testing::Values(10u),           // numKernels
+        ::testing::Values(32u),           // numKernels
         ::testing::Values(1u),            // kernelExecutionTime
         ::testing::Values(0u),            // kernelType
         ::testing::Values(false, true))); // measureCompletionTime
